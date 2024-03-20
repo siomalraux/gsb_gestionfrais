@@ -15,8 +15,8 @@
  * @link       http://www.php.net/manual/fr/book.pdo.php
  */
 class PdoGsb{   		
-	private static $server='mysql:host=192.168.1.109';
-	private static $db='dbname=frais_db';   		
+	private static $server='192.168.1.109';
+	private static $db_name='gestionfrais';
 	private static $db_user='sqladmin';
 	private static $user_pw='5ecuri+Y';
 	private static $monPdo;
@@ -26,8 +26,13 @@ class PdoGsb{
 	 * pour toutes les méthodes de la classe
 	 */				
 	private function __construct() {
-    	PdoGsb::$monPdo = new PDO(PdoGsb::$server.';'.PdoGsb::$db, PdoGsb::$db_user, PdoGsb::$user_pw); 
-		PdoGsb::$monPdo->query("SET CHARACTER SET utf8");
+		try{
+			PdoGsb::$monPdo = new PDO('mysql:host='.PdoGsb::$server, PdoGsb::$db_user, PdoGsb::$user_pw);
+		} catch(PDOException $e) {
+			echo $e->getMessage();
+		}
+		PdoGsb::$monPdo->query('create database if not exists '.PdoGsb::$db_name.' default character set utf8');
+		PdoGsb::$monPdo = new PDO('mysql:host='.PdoGsb::$server.';dbname='.PdoGsb::$db_name, PdoGsb::$db_user, PdoGsb::$user_pw);
 	}
 	public function __destruct() {
 		PdoGsb::$monPdo = null;
@@ -43,6 +48,13 @@ class PdoGsb{
 		}
 		return PdoGsb::$monPdoGsb;  
 	}
+	/*
+	 * Crée les tables de la base de données à partir
+	 * du fichier de code sql passé en paramètre
+	 */
+	public function creeLesTables($schema) {
+		PdoGsb::$monPdo->query(file_get_contents($schema));
+	}	
 	/*
 	 * Fonctions d'initialisation des lignes des tables
 	 * avec des données aléatoires
@@ -86,7 +98,7 @@ class PdoGsb{
 			   "min" => 20,
 			   "max" => 80 ),
 			4 => array(
-			   "lib" => "achat d'espace publicitaire",
+			   "lib" => "achat espace publicitaire",
 			   "min" => 20,
 			   "max" => 150 ),
 			5 => array(
@@ -120,10 +132,10 @@ class PdoGsb{
 		);
 		return $tab;
  	}
- 	public function creeLesFichesFrais() {
+	public function creeLesFichesFrais() {
 		$lesVisiteurs = $this->getLesVisiteurs();
 		$moisActuel = getMois(date("d/m/Y"));
-		$moisDebut = "201001";
+		$moisDebut = "202301";
 		$moisFin = getMoisPrecedent($moisActuel);
 		foreach($lesVisiteurs as $unVisiteur) {
 			$moisCourant = $moisFin;
@@ -176,7 +188,7 @@ class PdoGsb{
 				}
 				$hasardMois = $numAnnee."-".$numMois."-".$hasardJour;
 				$req = "insert into lignefraishorsforfait(idVisiteur,mois,libelle,date,montant)
-				values('$idVisiteur','$mois','$lib','$hasardMois',$hasardMontant);";
+				values('$idVisiteur','$mois','$lib','$hasardMois','$hasardMontant');";
 				PdoGsb::$monPdo->query($req);
 			}
 		}
@@ -195,7 +207,7 @@ class PdoGsb{
 					$quantite =rand(2,20);
 				}
 				$req = "insert into lignefraisforfait(idvisiteur,mois,idfraisforfait,quantite)
-				values('$idVisiteur','$mois','$idFraisForfait',$quantite);";
+				values('$idVisiteur','$mois','$idFraisForfait','$quantite');";
 				PdoGsb::$monPdo->query($req);	
 			}
 		}
@@ -221,15 +233,15 @@ class PdoGsb{
 		foreach($lesFichesFrais as $uneFicheFrais) {
 			$idVisiteur = $uneFicheFrais['idVisiteur'];
 			$mois =  $uneFicheFrais['mois'];
-			$dernierMois = $this->getDernierMois($idVisiteur);
-			$req = "select sum(montant) as cumul from ligneFraisHorsForfait where ligneFraisHorsForfait.idVisiteur = '$idVisiteur' 
-					and ligneFraisHorsForfait.mois = '$mois' ";
+			$dernierMois = $this->dernierMoisSaisi($idVisiteur);//$this->getDernierMois($idVisiteur);
+			$req = "select sum(montant) as cumul from lignefraishorsforfait where lignefraishorsforfait.idVisiteur = '$idVisiteur' 
+					and lignefraishorsforfait.mois = '$mois' ";
 			$res = PdoGsb::$monPdo->query($req);
 			$ligne = $res->fetch();
 			$cumulMontantHorsForfait = $ligne['cumul'];
-			$req = "select sum(ligneFraisForfait.quantite * fraisForfait.montant) as cumul from ligneFraisForfait, FraisForfait where
-			ligneFraisForfait.idFraisForfait = fraisForfait.id   and   ligneFraisForfait.idVisiteur = '$idVisiteur' 
-					and ligneFraisForfait.mois = '$mois' ";
+			$req = "select sum(lignefraisforfait.quantite * fraisforfait.montant) as cumul from lignefraisforfait, fraisforfait where
+			lignefraisforfait.idfraisforfait = fraisforfait.id   and   lignefraisforfait.idVisiteur = '$idVisiteur' 
+					and lignefraisforfait.mois = '$mois' ";
 			$res = PdoGsb::$monPdo->query($req);
 			$ligne = $res->fetch();
 			$cumulMontantForfait = $ligne['cumul'];

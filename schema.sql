@@ -1,16 +1,3 @@
-CREATE DATABASE IF NOT EXISTS frais_db;
-USE frais_db;
-
-GRANT ALL ON * TO frais_user@localhost IDENTIFIED BY 'frais_P@s$w0rd';
-
-SET CHARACTER SET utf8;
-SET SQL_MODE="NO_AUTO_VALUE_ON_ZERO";
-
-/*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
-/*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;
-/*!40101 SET @OLD_COLLATION_CONNECTION=@@COLLATION_CONNECTION */;
-/*!40101 SET NAMES utf8 */;
-
 --
 -- Base de données: `gsb_frais`
 --
@@ -121,7 +108,8 @@ INSERT INTO `fraisforfait` (`id`, `libelle`, `montant`) VALUES
 ('ETP', 'Forfait Etape', 110.00),
 ('KM', 'Frais Kilométrique', 0.62),
 ('NUI', 'Nuitée Hôtel', 80.00),
-('REP', 'Repas Restaurant', 25.00);
+('REP', 'Repas Restaurant', 25.00)
+ON DUPLICATE KEY UPDATE id = id;
 --
 -- Contenu de la table `LigneFraisForfait`
 --
@@ -134,7 +122,8 @@ INSERT INTO `etat` (`id`, `libelle`) VALUES
 ('RB', 'Remboursée'),
 ('CL', 'Saisie clôturée'),
 ('CR', 'Fiche créée, saisie en cours'),
-('VA', 'Validée et mise en paiement');
+('VA', 'Validée et mise en paiement')
+ON DUPLICATE KEY UPDATE id = id;
 
 -- --------------------------------------------------------
 
@@ -169,5 +158,6 @@ INSERT INTO `visiteur` (`id`, `nom`, `prenom`, `login`, `mdp`, `adresse`, `cp`, 
 ('e52', 'Eynde', 'Valérie', 'veynde', 'i7sn3', '3 Grand Place', '13015', 'Marseille', '1999-11-01'),
 ('f21', 'Finck', 'Jacques', 'jfinck', 'mpb3t', '10 avenue du Prado', '13002', 'Marseille', '2001-11-10'),
 ('f39', 'Frémont', 'Fernande', 'ffremont', 'xs5tq', '4 route de la mer', '13012', 'Allauh', '1998-10-01'),
-('f4', 'Gest', 'Alain', 'agest', 'dywvt', '30 avenue de la mer', '13025', 'Berre', '1985-11-01');
+('f4', 'Gest', 'Alain', 'agest', 'dywvt', '30 avenue de la mer', '13025', 'Berre', '1985-11-01')
+ON DUPLICATE KEY UPDATE id = id;
 -- --------------------------------------------------------
